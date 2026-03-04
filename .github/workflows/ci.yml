@@ -2,64 +2,44 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches:
+      - develop
+      - main
   pull_request:
-    branches: [ main, develop ]
+    branches:
+      - develop
+      - main
 
 jobs:
-  lint-and-test:
-    name: Lint & Tests
+  test-and-coverage:
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: ["18.x", "20.x"]
+        node-version: [18.x, 20.x]
 
     steps:
-      - name: Checkout du code
+      # Étape 1 : Checkout du code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configuration de Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      # Étape 2 : Installer Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
 
-      - name: Installation des dépendances
+      # Étape 3 : Installer les dépendances
+      - name: Install dependencies
         run: npm ci
 
-      - name: Lint du code
-        run: npm run lint || true
+      # Étape 4 : Lancer les tests
+      - name: Run tests
+        run: npm test -- --coverage
 
-      - name: Exécution des tests avec couverture
-        run: npm test -- --coverage --coverageReporters=text --coverageReporters=lcov
-
-      - name: Upload du rapport de couverture
-  uses: actions/upload-artifact@v4
-  with:
-    name: coverage-report-node-${{ matrix.node-version }}
-    path: ./coverage
-    if-no-files-found: warn
-
-  code-quality:
-    name: Qualité du code
-    runs-on: ubuntu-latest
-    needs: lint-and-test
-
-    steps:
-      - name: Checkout du code
-        uses: actions/checkout@v4
-
-      - name: Setup Node 20
-        uses: actions/setup-node@v4
+      # Étape 5 : Upload du rapport de couverture
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
         with:
-          node-version: "20.x"
-          cache: 'npm'
-
-      - run: npm ci
-
-      - name: Vérification des vulnérabilités
-        run: npm audit --audit-level=high || true
-
-      - name: Vérification des dépendances obsolètes
-        run: npm outdated || true
+          name: coverage-report
+          path: coverage/
