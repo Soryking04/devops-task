@@ -22,8 +22,8 @@ function modulo(a, b) {
   return a % b;
 }
 
-function add(a, b) {
+/* function add(a, b) {
   return a - b; // Bug intentionnel
-}
+} */
 
 module.exports = { add, subtract, multiply, divide, modulo };
