@@ -13,29 +13,39 @@ jobs:
 
     strategy:
       matrix:
-        node-version: ["18.x", "20.x"]   # Test sur 2 versions Node
+        node-version: ["18.x", "20.x"]
 
     steps:
+      # Checkout du code
       - name: Checkout du code
         uses: actions/checkout@v4
 
+      # Configuration de Node.js
       - name: Configuration de Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
+      # Installer les dépendances
       - name: Installation des dépendances
         run: npm ci
 
+      # Lint du code
       - name: Lint du code
         run: npm run lint || true
 
+      # Exécution des tests avec couverture
       - name: Exécution des tests avec couverture
         run: npm test -- --coverage --coverageReporters=text --coverageReporters=lcov
 
+      # Vérification du répertoire coverage
+      - name: Vérification du répertoire coverage
+        run: ls -R coverage/
+
+      # Upload du rapport de couverture
       - name: Upload du rapport de couverture
-        uses: actions/upload-artifact@v4   # ✅ correction ici
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report-node-${{ matrix.node-version }}
           path: coverage/
@@ -46,13 +56,17 @@ jobs:
     needs: lint-and-test
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Configuration Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: "20.x"
           cache: 'npm'
 
-      - run: npm ci
+      - name: Installation des dépendances
+        run: npm ci
 
       - name: Vérification des vulnérabilités
         run: npm audit --audit-level=high || true
